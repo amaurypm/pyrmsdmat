@@ -118,7 +118,7 @@ def main():
 	            cmd.load(unique_files[r])
 
 	        except:
-	            write(sys.stderr, "WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[c]))
+	            sys.stderr.write("WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[c]))
 	            continue
 
 	        rmsd_mat[r, c] = cmd.align("{} and name CA".format(rootname(unique_files[r])), "{} and name CA".format(rootname(unique_files[c])))[0]
