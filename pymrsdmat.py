@@ -29,6 +29,7 @@ def rootname(filename):
     return rootname
 
 def write_csv(filename, unique_files, mat):
+	print("Writing file {}".format(filename))
 	with open(filename, "w") as output_file:
 		output_file.write("structures")
 
@@ -53,6 +54,7 @@ def write_csv(filename, unique_files, mat):
 			output_file.write("\n")
 
 def write_meg(filename, unique_files, mat):
+	print("Writing file {}".format(filename))
 	with open(filename, "w") as output_file:
 		output_file.write("#mega\n")
 		output_file.write("!Title: RMSD matrix;\n")
@@ -105,27 +107,37 @@ def main():
 
 	rmsd_mat = np.zeros((n, n)) - 1.0 # -1.0 is a nonsense rmsd value.
 
+	cmd.reinitialize() # Just to print Pymol usage as a module waring in here.
+
 	for c in range(n-1):
-	    try:
-	        cmd.load(unique_files[c])
+		print("{} vs ".format(unique_files[c]))
 
-	    except:
-	        sys.stderr.write("WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[c]))
-	        continue
+		try:
+			cmd.load(unique_files[c])
 
-	    for r in range(c + 1, n):
-	        try:
-	            cmd.load(unique_files[r])
+		except:
+			sys.stderr.write("WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[c]))
+			continue
 
-	        except:
-	            sys.stderr.write("WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[c]))
-	            continue
+		for r in range(c + 1, n):
 
-	        rmsd_mat[r, c] = cmd.align("{} and name CA".format(rootname(unique_files[r])), "{} and name CA".format(rootname(unique_files[c])))[0]
+			try:
+				cmd.load(unique_files[r])
+				print("\t{}".format(unique_files[r]), end="... ")
 
-	        cmd.delete(rootname(unique_files[r]))
+			except:
+				sys.stderr.write("WARNING: Can not load structure {}. Ignoring it. Corresponding RMSD values will be set to -1.0\n".format(unique_files[r]))
+				continue
 
-	    cmd.delete(rootname(unique_files[c]))
+			rmsd_mat[r, c] = cmd.align("{} and name CA".format(rootname(unique_files[r])), "{} and name CA".format(rootname(unique_files[c])))[0]
+
+			print("{:.1f}".format(rmsd_mat[r, c]))
+
+			cmd.delete(rootname(unique_files[r]))
+
+		cmd.delete(rootname(unique_files[c]))
+
+	print()
 
 	write_csv(args.output + ".csv", unique_files, rmsd_mat)
 	write_meg(args.output + ".meg", unique_files, rmsd_mat)
